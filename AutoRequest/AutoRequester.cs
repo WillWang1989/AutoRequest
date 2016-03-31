@@ -578,7 +578,6 @@ namespace AutoRequest
         public bool LoadRules(string sFilename, bool bIsDefaultRuleFile)
         {
             FileStream fileStream;
-            byte[] numArray;
             bool flag;
             if (bIsDefaultRuleFile)
             {
@@ -642,7 +641,7 @@ namespace AutoRequest
                                     string action = xmlTextReader.GetAttribute("Action");
                                     string header = xmlTextReader.GetAttribute("Header");
                                     string headerValue = xmlTextReader.GetAttribute("HeaderValue");
-
+                                    headerValue = Encoding.UTF8.GetString(Convert.FromBase64String(headerValue));
                                     bool flag2 = false;
                                     var str1 = xmlTextReader.GetAttribute("DisableAfterMatch");
                                     if ("true" == str1)
@@ -734,11 +733,6 @@ namespace AutoRequest
                     oRule.ViewItem.Remove();
                     oRule.ViewItem = null;
                 }
-                //if (oRule._oEditor != null)
-                //{
-                //    oRule._oEditor.Dispose();
-                //    oRule._oEditor = null;
-                //}
                 flag = true;
             }
             catch (Exception)
@@ -780,8 +774,8 @@ namespace AutoRequest
                             xmlTextWriter.WriteStartElement("ResponseRule");
                             xmlTextWriter.WriteAttributeString("Match", rule.sMatch);
                             xmlTextWriter.WriteAttributeString("Action", rule.Action + "");
-                            xmlTextWriter.WriteAttributeString("Header", rule.Header + "");
-                            xmlTextWriter.WriteAttributeString("HeaderValue", rule.HeaderValue + "");
+                            xmlTextWriter.WriteAttributeString("Header", rule.Header);
+                            xmlTextWriter.WriteAttributeString("HeaderValue", Convert.ToBase64String(Encoding.UTF8.GetBytes(rule.HeaderValue)));
                             if (rule.bDisableOnMatch)
                             {
                                 xmlTextWriter.WriteAttributeString("DisableAfterMatch", XmlConvert.ToString(rule.bDisableOnMatch));
@@ -806,96 +800,6 @@ namespace AutoRequest
                 flag = false;
             }
             return flag;
-        }
-        internal static string RegExEscape(string sString, bool bAddPrefixCaret, bool bAddSuffixDollarSign)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            if (bAddPrefixCaret)
-            {
-                stringBuilder.Append("^");
-            }
-            string str = sString;
-            for (int i = 0; i < str.Length; i++)
-            {
-                char chr = str[i];
-                char chr1 = chr;
-                if (chr1 > '?')
-                {
-                    switch (chr1)
-                    {
-                        case '[':
-                        case '\\':
-                        case '\u005E':
-                            {
-                                break;
-                            }
-                        case ']':
-                            {
-                                goto Label0;
-                            }
-                        default:
-                            {
-                                switch (chr1)
-                                {
-                                    case '{':
-                                    case '|':
-                                        {
-                                            break;
-                                        }
-                                    default:
-                                        {
-                                            goto Label0;
-                                        }
-                                }
-                                break;
-                            }
-                    }
-                }
-                else
-                {
-                    switch (chr1)
-                    {
-                        case '#':
-                        case '$':
-                        case '(':
-                        case ')':
-                        case '+':
-                        case '.':
-                            {
-                                break;
-                            }
-                        case '%':
-                        case '&':
-                        case '\'':
-                        case ',':
-                        case '-':
-                            {
-                                goto Label0;
-                            }
-                        case '*':
-                            {
-                                stringBuilder.Append('.');
-                                goto Label0;
-                            }
-                        default:
-                            {
-                                if (chr1 == '?')
-                                {
-                                    break;
-                                }
-                                goto Label0;
-                            }
-                    }
-                }
-                stringBuilder.Append('\\');
-                Label0:
-                stringBuilder.Append(chr);
-            }
-            if (bAddSuffixDollarSign)
-            {
-                stringBuilder.Append('$');
-            }
-            return stringBuilder.ToString();
         }
 
         public override string ToString()
